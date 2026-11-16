@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>معاينة النماذج</title>
+<link rel="stylesheet" href="../assets/css/app.css">
+</head>
+<body>
+<div id="loginScreen" class="login-screen hidden"></div>
+<div id="appShell" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main"><header class="topbar" id="topbar"></header><main class="page" id="viewRoot"></main></div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot" class="toast-root"></div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/ui.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/views/dashboard.js"></script>
+<script src="../assets/js/views/evaluations.js"></script>
+<script src="../assets/js/views/complaints.js"></script>
+<script src="../assets/js/views/inspections.js"></script>
+<script src="../assets/js/views/findings.js"></script>
+<script src="../assets/js/views/kpis.js"></script>
+<script src="../assets/js/views/satisfaction.js"></script>
+<script src="../assets/js/views/training.js"></script>
+<script src="../assets/js/views/committee.js"></script>
+<script src="../assets/js/views/reports.js"></script>
+<script src="../assets/js/views/settings.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var target = q.get('m') || 'complaint';
+  KAK.Store.load();
+  var u = KAK.Store.data.users[0];
+  KAK.App.state.user = u;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  location.hash = '#/complaints';
+  KAK.App.refresh();
+  setTimeout(function () {
+    if (target === 'complaint') KAK.views.complaints.openNew();
+    else if (target === 'eval') { location.hash = '#/evaluations'; KAK.App.refresh(); setTimeout(function () { document.getElementById('evNew').click(); }, 120); }
+    else if (target === 'inspection') { location.hash = '#/inspections'; KAK.App.refresh(); setTimeout(function () { document.getElementById('inNew').click(); }, 120); }
+    else if (target === 'finding') KAK.views.findings.openNew({ branchId: 'b2' });
+    else if (target === 'detail') KAK.views.complaints.openDetail(KAK.Store.data.complaints[40].id);
+    else if (target === 'alerts') document.getElementById('btnAlerts').click();
+    else if (target === 'manual') { location.hash = '#/kpis'; KAK.App.refresh(); setTimeout(function () { document.getElementById('btnManual').click(); }, 120); }
+  }, 200);
+})();
+</script>
+</body>
+</html>

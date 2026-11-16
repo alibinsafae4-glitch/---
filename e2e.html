@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>E2E</title>
+<link rel="stylesheet" href="../assets/css/app.css"></head>
+<body>
+<div id="loginScreen" class="login-screen hidden"></div>
+<div id="appShell" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main"><header class="topbar" id="topbar"></header><main class="page" id="viewRoot"></main></div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot" class="toast-root"></div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/ui.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/views/dashboard.js"></script>
+<script src="../assets/js/views/evaluations.js"></script>
+<script src="../assets/js/views/complaints.js"></script>
+<script src="../assets/js/views/inspections.js"></script>
+<script src="../assets/js/views/findings.js"></script>
+<script src="../assets/js/views/kpis.js"></script>
+<script src="../assets/js/views/satisfaction.js"></script>
+<script src="../assets/js/views/training.js"></script>
+<script src="../assets/js/views/committee.js"></script>
+<script src="../assets/js/views/reports.js"></script>
+<script src="../assets/js/views/settings.js"></script>
+<script>
+var R = [];
+function ok(cond, msg) { R.push((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) window.__fails = (window.__fails || 0) + 1; }
+function step(name, fn) { try { fn(); } catch (e) { R.push('ERROR ' + name + ': ' + e.message); window.__fails = (window.__fails || 0) + 1; } }
+function q(sel, root) { return (root || document).querySelector(sel); }
+function clearModals() { document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.remove(); }); }
+
+setTimeout(function () {
+  if (location.search.indexOf("run=1") === -1) {
+    var p0 = document.createElement("pre");
+    p0.textContent = "تشغيل الاختبار يتطلب ?run=1 — تحذير: يعيد تهيئة البيانات.";
+    document.body.appendChild(p0);
+    return;
+  }
+  KAK.Store.load();
+  KAK.Store.reset();
+  var db = KAK.Store.data;
+
+  /* ---------- الدخول ---------- */
+  step('login', function () {
+    ok(KAK.App.login('quality', 'quality123') === true, 'تسجيل الدخول بكلمة مرور صحيحة');
+    ok(KAK.App.login('quality', 'bad') === false, 'رفض كلمة مرور خاطئة');
+    KAK.App.state.user = db.users.filter(function (u) { return u.role === 'quality'; })[0];
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    location.hash = '#/complaints';
+    KAK.App.refresh();
+    ok(document.querySelectorAll('.nav a').length === 11, 'بناء القائمة الجانبية');
+  });
+
+  /* ---------- شكوى: إضافة ---------- */
+  step('complaint-add', function () {
+    var before = db.complaints.length;
+    q('#cpNew').click();
+    var form = q('#cpForm');
+    ok(!!form, 'فتح نموذج الشكوى');
+    form.querySelector('[name=customerName]').value = 'عميل اختبار';
+    form.querySelector('[name=subject]').value = 'موضوع اختبار آلي';
+    form.querySelector('[name=branchId]').value = 'b2';
+    form.querySelector('[name=type]').value = 'شكوى متوسطة';
+    form.querySelector('[name=receivedDate]').value = KAK.U.todayISO();
+    var due = form.querySelector('[name=dueDate]').value;
+    ok(/^\d{4}-\d{2}-\d{2}$/.test(due), 'حساب تاريخ الاستحقاق تلقائيًا (' + due + ')');
+    q('#cpSave').click();
+    ok(db.complaints.length === before + 1, 'إضافة الشكوى إلى السجل');
+    var c = db.complaints[db.complaints.length - 1];
+    ok(/^CMP-\d{4}-\d{4}$/.test(c.refNo), 'رقم مرجعي صحيح (' + c.refNo + ')');
+    ok(c.status === 'new', 'الحالة الابتدائية: مفتوحة');
+    window.__cid = c.id;
+    clearModals();
+  });
+
+  /* ---------- شكوى: إغلاق ---------- */
+  step('complaint-close', function () {
+    var c = db.complaints.filter(function (x) { return x.id === window.__cid; })[0];
+    location.hash = '#/complaints'; KAK.App.refresh();
+    KAK.views.complaints.openDetail(c.id);
+    ok(!!q('#cpClose2'), 'زر إغلاق الشكوى متاح');
+    q('#cpClose2').click();
+    var cf = q('#closeForm');
+    cf.querySelector('[name=action]').value = 'إجراء اختباري';
+    cf.querySelector('[name=rootCause]').value = 'سبب اختباري';
+    cf.querySelector('[name=satisfaction]').value = 'راضٍ';
+    q('#clSave').click();
+    ok(c.status === 'closed', 'إغلاق الشكوى');
+    ok(!!c.closedDate && !!c.action && !!c.rootCause, 'توثيق الإغلاق والإجراء والسبب');
+    clearModals();
+  });
+
+  /* ---------- بطاقة تقييم ---------- */
+  step('evaluation', function () {
+    location.hash = '#/evaluations'; KAK.App.refresh();
+    var before = db.evaluations.length;
+    q('#evNew').click();
+    var f = q('#evalForm');
+    f.querySelector('[name=branchId]').value = 'b3';
+    f.querySelector('[name=date]').value = KAK.U.todayISO();
+    var inputs = f.querySelectorAll('input[data-key]');
+    inputs.forEach(function (inp) {
+      var max = Number(inp.getAttribute('max'));
+      inp.value = max; inp.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    ok(q('#evalTotal').textContent.indexOf('100') > -1, 'حساب الإجمالي أثناء الإدخال (100)');
+    q('#evalSave').click();
+    ok(db.evaluations.length === before + 1, 'حفظ بطاقة التقييم');
+    var ev = db.evaluations[db.evaluations.length - 1];
+    ok(ev.total === 100, 'الدرجة المحفوظة = 100');
+    clearModals();
+  });
+
+  /* ---------- تفتيش ---------- */
+  step('inspection', function () {
+    location.hash = '#/inspections'; KAK.App.refresh();
+    var before = db.inspections.length;
+    q('#inNew').click();
+    var f = q('#inForm');
+    f.querySelector('[name=branchId]').value = 'b4';
+    f.querySelector('[name=date]').value = KAK.U.todayISO();
+    document.querySelectorAll('#inForm .rating').forEach(function (grp) {
+      grp.querySelector('[data-val="4"]').click();
+    });
+    ok(q('#inScore').textContent === '80%', 'حساب درجة التفتيش (80%)');
+    q('#inSave').click();
+    ok(db.inspections.length === before + 1, 'حفظ زيارة التفتيش');
+    var ins = db.inspections[db.inspections.length - 1];
+    ok(ins.score === 80 && ins.items.length === 12, 'الدرجة وعدد العناصر صحيحة');
+    clearModals();
+  });
+
+  /* ---------- ملاحظة + إغلاق ---------- */
+  step('finding', function () {
+    location.hash = '#/findings'; KAK.App.refresh();
+    var before = db.findings.length;
+    q('#fnNew').click();
+    var f = q('#fnForm');
+    f.querySelector('[name=desc]').value = 'ملاحظة اختبارية';
+    f.querySelector('[name=branchId]').value = 'b5';
+    f.querySelector('[name=severity]').value = 'high';
+    f.querySelector('[name=severity]').dispatchEvent(new Event('change', { bubbles: true }));
+    q('#fnSave').click();
+    ok(db.findings.length === before + 1, 'تسجيل الملاحظة');
+    var fn = db.findings[db.findings.length - 1];
+    var diff = KAK.U.diffDays(fn.foundDate, fn.dueDate);
+    ok(diff === 3, 'مهلة الخطورة العالية = 3 أيام');
+    clearModals();
+    KAK.views.findings.openDetail(fn.id);
+    q('#fnClose2').click();
+    var cf = q('#fncForm');
+    cf.querySelector('[name=action]').value = 'تم التصحيح';
+    q('#fncSave').click();
+    ok(fn.status === 'closed' && !!fn.closedDate, 'إغلاق الملاحظة وتوثيق التحقق');
+    clearModals();
+  });
+
+  /* ---------- استبيان رضا ---------- */
+  step('survey', function () {
+    location.hash = '#/satisfaction'; KAK.App.refresh();
+    var before = db.surveys.length;
+    q('#svNew').click();
+    var f = q('#svForm');
+    f.querySelector('[name=branchId]').value = 'b2';
+    document.querySelectorAll('[data-star]')[4].click();
+    q('#svSave').click();
+    ok(db.surveys.length === before + 1, 'تسجيل استبيان رضا');
+    ok(db.surveys[db.surveys.length - 1].score === 5, 'تقييم 5 نجوم');
+    clearModals();
+  });
+
+  /* ---------- مؤشر يدوي ---------- */
+  step('kpi-manual', function () {
+    location.hash = '#/kpis'; KAK.App.refresh();
+    var before = db.kpiValues.length;
+    q('#btnManual').click();
+    var f = q('#manualForm');
+    var inp = f.querySelector('[name=m_wait]');
+    inp.value = '7.5';
+    q('#mSave').click();
+    ok(db.kpiValues.length >= before, 'حفظ قيمة مؤشر يدوي');
+    var mk = KAK.U.monthKey(KAK.U.todayISO());
+    var row = db.kpiValues.filter(function (v) { return v.kpi === 'wait' && v.branchId === 'b1' && v.month === mk; })[0];
+    ok(row && Number(row.value) === 7.5, 'القيمة المحفوظة = 7.5');
+    clearModals();
+  });
+
+  /* ---------- لجنة + تقرير ---------- */
+  step('committee-report', function () {
+    location.hash = '#/committee'; KAK.App.refresh();
+    var before = db.meetings.length;
+    q('#mtNew').click();
+    var f = q('#mtForm');
+    f.querySelector('[name=date]').value = KAK.U.todayISO();
+    f.querySelector('[name=decisions]').value = 'قرار أول\nقرار ثانٍ';
+    q('#mtSave').click();
+    ok(db.meetings.length === before + 1, 'إضافة اجتماع لجنة');
+    ok(db.meetings[db.meetings.length - 1].decisions.length === 2, 'تخزين القرارات كقائمة');
+    clearModals();
+    location.hash = '#/reports'; KAK.App.refresh();
+    ok(document.querySelectorAll('.report-sheet').length === 1, 'توليد التقرير');
+    var html = q('#reportSheet').innerHTML;
+    ok(html.length > 3000 && html.indexOf('undefined') === -1, 'محتوى التقرير سليم');
+  });
+
+  /* ---------- إعداد + استمرارية ---------- */
+  step('settings-persist', function () {
+    location.hash = '#/settings'; KAK.App.refresh();
+    var f = q('#setGeneral');
+    f.querySelector('[name=dept]').value = 'إدارة توكيد الجودة';
+    q('#btnSaveGeneral').click();
+    var raw = localStorage.getItem('kak_qc_db_v2');
+    ok(!!raw, 'وجود البيانات في التخزين المحلي');
+    var saved = JSON.parse(raw);
+    ok(saved.complaints.length === db.complaints.length, 'استمرارية الشكاوى بعد الحفظ');
+    ok(saved.settings.dept === 'إدارة توكيد الجودة', 'حفظ إعدادات البنك');
+  });
+
+  var pre = document.createElement('pre');
+  pre.id = 'e2e';
+  pre.textContent = '===E2E===\n' + R.join('\n') + '\n--- FAILS: ' + (window.__fails || 0);
+  document.body.appendChild(pre);
+}, 900);
+</script>
+</body>
+</html>

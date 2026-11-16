@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>معاينة | منصة مراقبة الجودة</title>
+<link rel="stylesheet" href="../assets/css/app.css">
+</head>
+<body>
+<div id="loginScreen" class="login-screen hidden"></div>
+<div id="appShell" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="page" id="viewRoot"></main>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot" class="toast-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/ui.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/views/dashboard.js"></script>
+<script src="../assets/js/views/evaluations.js"></script>
+<script src="../assets/js/views/complaints.js"></script>
+<script src="../assets/js/views/inspections.js"></script>
+<script src="../assets/js/views/findings.js"></script>
+<script src="../assets/js/views/kpis.js"></script>
+<script src="../assets/js/views/satisfaction.js"></script>
+<script src="../assets/js/views/training.js"></script>
+<script src="../assets/js/views/committee.js"></script>
+<script src="../assets/js/views/reports.js"></script>
+<script src="../assets/js/views/settings.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var role = q.get('role') || 'admin';
+  KAK.Store.load();
+  var user = KAK.Store.data.users.filter(function (u) { return u.username === role; })[0] || KAK.Store.data.users[0];
+  try { localStorage.setItem('kak_qc_session', JSON.stringify({ userId: user.id })); } catch (e) { }
+  KAK.App.state.user = user;
+  if (user.role === 'branch') KAK.App.state.branchId = user.branchId;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  KAK.App.refresh();
+  window.addEventListener('hashchange', function () { KAK.App.refresh(true); });
+})();
+</script>
+</body>
+</html>
