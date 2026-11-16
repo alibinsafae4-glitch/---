@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>منصة مراقبة الجودة | كاك بنك – الإدارة العامة عدن</title>
+  <meta name="description" content="منصة مؤسسية لمراقبة الجودة في بنك التسليف التعاوني والزراعي (كاك بنك) – الإدارة العامة عدن: بطاقة تقييم الجودة، التفتيش الميداني، الشكاوى، الملاحظات والإجراءات التصحيحية، مؤشرات الأداء، والتقارير.">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="icon" href="assets/img/favicon.png">
+</head>
+<body>
+
+<!-- ============ شاشة الدخول ============ -->
+<div id="loginScreen" class="login-screen hidden">
+  <div class="login-brand">
+    <div>
+      <div class="brand-plaque"><img src="assets/img/cac-logo.png" alt="كاك بنك — بنك التسليف التعاوني والزراعي"></div>
+      <div class="brand-line">الإدارة العامة – عدن · إدارة توكيد الجودة</div>
+      <h1>منصة مراقبة الجودة</h1>
+      <p class="lead">نظام مؤسسي للقياس والمساءلة والتحسين المستمر: بطاقة تقييم موحدة، سجل شكاوى مركزي، تفتيش ميداني، إجراءات تصحيحية، ومؤشرات أداء وتقارير لدعم قرارات الإدارة العليا.</p>
+      <div class="login-pillars">
+        <div class="pillar">__ICON_target__ قياس الأداء ومؤشراته</div>
+        <div class="pillar">__ICON_message__ معالجة الشكاوى بالمهل</div>
+        <div class="pillar">__ICON_search__ التفتيش الميداني للفروع</div>
+        <div class="pillar">__ICON_shield__ الامتثال وأمن المعلومات</div>
+      </div>
+    </div>
+    <div>
+      <div class="login-foot">إدارة توكيد الجودة · «شاركنا الريادة»</div>
+    </div>
+  </div>
+
+  <div class="login-form-wrap">
+    <div class="login-card">
+      <h2>تسجيل الدخول</h2>
+      <p class="sub">أدخل بيانات حسابك المؤسسي للوصول إلى المنصة.</p>
+      <div class="login-error" id="loginError"></div>
+      <form id="loginForm" autocomplete="off">
+        <label for="username">اسم المستخدم</label>
+        <div class="input-wrap">__ICON_users__<input type="text" id="username" name="username" placeholder="مثال: quality" required></div>
+        <label for="password">كلمة المرور</label>
+        <div class="input-wrap">__ICON_shield__<input type="password" id="password" name="password" placeholder="••••••••" required></div>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top:8px;padding-block:11px">__ICON_arrow__ دخول المنصة</button>
+      </form>
+      <div class="login-hint">
+        <b>حسابات تجريبية للاستعراض</b> — اضغط على الحساب لتعبئة بياناته:
+        <div class="cred">
+          <button type="button" data-cred data-user="admin" data-pass="admin123">مدير النظام</button>
+          <button type="button" data-cred data-user="quality" data-pass="quality123">مسؤول الجودة</button>
+          <button type="button" data-cred data-user="branch" data-pass="branch123">مدير فرع</button>
+          <button type="button" data-cred data-user="committee" data-pass="committee123">عضو اللجنة</button>
+          <button type="button" data-cred data-user="viewer" data-pass="viewer123">اطلاع فقط</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ هيكل التطبيق ============ -->
+<div id="appShell" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="page" id="viewRoot"></main>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot" class="toast-root"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/views/dashboard.js"></script>
+<script src="assets/js/views/evaluations.js"></script>
+<script src="assets/js/views/complaints.js"></script>
+<script src="assets/js/views/inspections.js"></script>
+<script src="assets/js/views/findings.js"></script>
+<script src="assets/js/views/kpis.js"></script>
+<script src="assets/js/views/satisfaction.js"></script>
+<script src="assets/js/views/training.js"></script>
+<script src="assets/js/views/committee.js"></script>
+<script src="assets/js/views/reports.js"></script>
+<script src="assets/js/views/settings.js"></script>
+<script>
+  /* استبدال الأيقونات والهوية في شاشة الدخول */
+  (function () {
+    var el = document.getElementById('loginScreen');
+    var map = {
+      '__LOGO__': KAK.UI.logo(34),
+      '__ICON_target__': KAK.UI.icon('target'),
+      '__ICON_message__': KAK.UI.icon('message'),
+      '__ICON_search__': KAK.UI.icon('search'),
+      '__ICON_shield__': KAK.UI.icon('shield'),
+      '__ICON_users__': KAK.UI.icon('users'),
+      '__ICON_arrow__': KAK.UI.icon('arrow')
+    };
+    Object.keys(map).forEach(function (k) {
+      el.innerHTML = el.innerHTML.split(k).join(map[k]);
+    });
+    KAK.App.start();
+  })();
+</script>
+</body>
+</html>
