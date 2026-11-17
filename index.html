@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>منصة مراقبة الجودة | كاك بنك – الإدارة العامة عدن</title>
-  <meta name="description" content="منصة مؤسسية لمراقبة الجودة في بنك التسليف التعاوني والزراعي (كاك بنك) – الإدارة العامة عدن: بطاقة تقييم الجودة، التفتيش الميداني، الشكاوى، الملاحظات والإجراءات التصحيحية، مؤشرات الأداء، والتقارير.">
+  <title>منصة توكيد الجودة | كاك بنك – الإدارة العامة عدن</title>
+  <meta name="description" content="منصة مؤسسية لتوكيد الجودة في بنك التسليف التعاوني والزراعي (كاك بنك) – الإدارة العامة عدن">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="icon" href="assets/img/favicon.png">
 </head>
@@ -16,8 +16,8 @@
     <div>
       <div class="brand-plaque"><img src="assets/img/cac-logo.png" alt="كاك بنك — بنك التسليف التعاوني والزراعي"></div>
       <div class="brand-line">الإدارة العامة – عدن · إدارة توكيد الجودة</div>
-      <h1>منصة مراقبة الجودة</h1>
-      <p class="lead">نظام مؤسسي للقياس والمساءلة والتحسين المستمر: بطاقة تقييم موحدة، سجل شكاوى مركزي، تفتيش ميداني، إجراءات تصحيحية، ومؤشرات أداء وتقارير لدعم قرارات الإدارة العليا.</p>
+      <h1>منصة توكيد الجودة</h1>
+      <p class="lead">نظام مؤسسي للقياس والمساءلة والتحسين المستمر: بطاقة تقييم موحدة، سجل شكاوى مركزي، تفتيش ميداني ومؤشرات أداء.</p>
       <div class="login-pillars">
         <div class="pillar">__ICON_target__ قياس الأداء ومؤشراته</div>
         <div class="pillar">__ICON_message__ معالجة الشكاوى بالمهل</div>
@@ -98,6 +98,12 @@
     Object.keys(map).forEach(function (k) {
       el.innerHTML = el.innerHTML.split(k).join(map[k]);
     });
+    var refresh = KAK.App.refresh;
+    KAK.App.refresh = function (scrollTop) {
+      refresh.call(KAK.App, scrollTop);
+      var brand = document.querySelector('.org-sub');
+      if (brand) brand.textContent = brand.textContent.replace('منصة مراقبة الجودة', 'منصة توكيد الجودة');
+    };
     KAK.App.start();
   })();
 </script>
